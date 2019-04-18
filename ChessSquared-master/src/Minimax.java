@@ -90,7 +90,7 @@ public class Minimax {
         }
         if(betterMovesFoundCount == 1)
         {
-            System.out.println("oups");
+            System.out.println("An improved move was not found!");
         }
         
         return bestMove;
