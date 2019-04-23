@@ -1,13 +1,4 @@
-/*
-HashMap<Point,ArrayList<Point>> example;
-        example = AllPossibleMovesForMinimax(testBoard, false);
-        for (Point key: example.keySet()){ 
-            String value = example.get(key).toString();  
-            System.out.println("Piece at: (" + key.x + ", " + key.y  + ") can move to: " + value);  
-        }
-*/
 
- 
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,51 +6,7 @@ import java.util.HashMap;
 
  
 public class Minimax {
- 
-    
-    public static void main(String[] args) { 
-        int[][] testBoard = new int[8][8];
-        for(int y = 0; y < 8; y++){
-            for(int x = 0; x < 8; x++){
-                testBoard[y][x] = 0;
-                if(x == 6)
-                    testBoard[y][x] = 100;
-                if(x == 1)
-                    testBoard[y][x] = -100; 
-            }
-        }   
-        testBoard[0][0] = -525;
-        testBoard[0][7] = 525;
-        testBoard[7][7] = 525;
-        testBoard[7][0] = -525;
-        
-        testBoard[1][0] = -350;
-        testBoard[1][7] = 350;
-        testBoard[6][7] = 350;
-        testBoard[6][0] = -350;
-        
-        testBoard[2][0] = -400;
-        testBoard[2][7] = 400;
-        testBoard[5][7] = 400;
-        testBoard[5][0] = -400;
-        
-        testBoard[3][0] = -1000;
-        testBoard[3][7] = 1000;
-        testBoard[4][7] = 10000;
-        testBoard[4][0] = -10000; 
-        
-        
-        testBoard[4][5] = -100;
-        
-        for (int y=0;y<8;y++){
-            for(int x=0;x<8;x++){  
-                    System.out.print(testBoard[y][x] +", ");
-                if (x==7)
-                    System.out.println();
-            }
-        }  
-        System.out.println(IsKingInCheck(testBoard, true));
-    }
+
     
     public Minimax(){
     
@@ -73,15 +20,18 @@ public class Minimax {
         int bestScore = Integer.MIN_VALUE;
         int tempScore = 0;
         int betterMovesFoundCount = 0;
+        int alpha = Integer.MIN_VALUE;
+        int beta = Integer.MAX_VALUE;
         
         int[][] tempBoard = DeepCopyArray(board);
         for(Point key: allPossibleMoves.keySet()){ 
             ArrayList<Point> list = allPossibleMoves.get(key);
             for(int i = 0; i < list.size(); i++){ 
                 tempBoard = DeepCopyArray(MockMove(tempBoard,key, list.get(i)));
-                tempScore = Minimise(tempBoard,1,targetDepth);
+                tempScore = Minimise(tempBoard,1,targetDepth, alpha, beta);
                 if(tempScore>bestScore){
                     bestScore = tempScore;
+                    alpha = tempScore;
                     bestMove[0] = key;
                     bestMove[1] = list.get(i);
                     betterMovesFoundCount++;
@@ -96,7 +46,7 @@ public class Minimax {
         return bestMove;
     }
      
-    private static int Maximise(int[][] board, int depth, int targetDepth){ 
+    private static int Maximise(int[][] board, int depth, int targetDepth, int alpha, int beta){ 
         if(IsKingInCheck(board, true))
             return Integer.MIN_VALUE;
         else if(depth == targetDepth)
@@ -104,7 +54,7 @@ public class Minimax {
         else{
             HashMap<Point,ArrayList<Point>> allPossibleMoves = new HashMap<>();
             allPossibleMoves = AllPossibleMoves(board, true);
-            int bestScore = Integer.MIN_VALUE;
+            int bestScore = alpha;
             int tempScore = 0;
 
             for(Point key: allPossibleMoves.keySet()){ 
@@ -112,16 +62,19 @@ public class Minimax {
                 for(int i = 0; i < list.size(); i++){
                     int[][] tempBoard = DeepCopyArray(board);
                     tempBoard = DeepCopyArray(MockMove(tempBoard,key, list.get(i)));
-                    tempScore = Minimise(tempBoard,depth+1,targetDepth);
+                    tempScore = Minimise(tempBoard,depth+1,targetDepth, bestScore, beta);
+                    if(tempScore >= beta)
+                        return beta;
                     if(tempScore>bestScore){
                         bestScore = tempScore; 
+                        
                     }
                 }
             } 
             return bestScore;  
          } 
     }
-    private static int Minimise(int[][] board, int depth, int targetDepth){ 
+    private static int Minimise(int[][] board, int depth, int targetDepth,int alpha, int beta){ 
         if(IsKingInCheck(board, false))
             return Integer.MAX_VALUE;
         if(depth == targetDepth)
@@ -129,7 +82,7 @@ public class Minimax {
          else{
             HashMap<Point,ArrayList<Point>> allPossibleMoves = new HashMap<>();
             allPossibleMoves = AllPossibleMoves(board, false);
-            int bestScore = Integer.MAX_VALUE;
+            int bestScore = beta;
             int tempScore = 0;
 
             for(Point key: allPossibleMoves.keySet()){ 
@@ -137,7 +90,9 @@ public class Minimax {
                 for(int i = 0; i < list.size(); i++){
                     int[][] tempBoard = DeepCopyArray(board);
                     tempBoard = DeepCopyArray(MockMove(tempBoard,key, list.get(i)));
-                    tempScore = Maximise(tempBoard,depth+1,targetDepth);
+                    tempScore = Maximise(tempBoard,depth,targetDepth, alpha, bestScore);
+                    if(tempScore <= alpha)
+                        return alpha;
                     if(tempScore<bestScore){
                         bestScore = tempScore; 
                     }
